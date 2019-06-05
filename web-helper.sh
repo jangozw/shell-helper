@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# docker web环境助手
 ######################## 参数 ##################################
 #web start centos-web
 
@@ -8,10 +8,13 @@ action=$1
 # 操作的容器名称
 container=$2
 
-# 第二个参数唯恐，默认使用的容器
+# 第二个参数为空，默认使用的容器
 if [ ! -n "$container" ];then
     container="centos-web2"
 fi
+
+#web 使用的镜像 (本地的已经拉好了)
+webImage="jangozw/centos-web"
 
 ########################## 函数 ############################
 # 帮助信息
@@ -28,7 +31,7 @@ operationHelp(){
 # 创建一个新容器
 newContainer(){
   # -p 是端口映射,-v 目录文件同步, jangozw/centos-web  是拉的镜像
-  sudo docker run -d -p 12000:80  -p 12002:22  -p 12003:15672  -v /Users/Django/www:/data/www --name $container  --privileged=true  jangozw/centos-web  /usr/sbin/init
+  sudo docker run -d -p 12000:80  -p 12002:22  -p 12003:15672  -v /Users/Django/www:/data/www --name $container  --privileged=true  $webImage  /usr/sbin/init
   echo "创建容器 $container :"
   docker ps -a | grep "$container"
   echo "--------------------------------基本操作------------------------------------"
@@ -40,16 +43,30 @@ newContainer(){
 }
 # 停止运行一个容器
 stopContainer(){
-   docker stop $container
+    echo "stop $container"
+    docker stop $container
 }
 # 运行一个容器，并进入
 startContainer(){
-   docker start $container
-   docker exec -it $container /bin/bash
+    echo "start and entry $container..."
+    docker start $container
+    docker exec -it $container /bin/bash
 }
-# 进入一个容器
+# 进入一个已经开启的容器
 execContainer(){
-   docker exec -it $container /bin/bash
+    echo "Entry $container..."
+    docker exec -it $container /bin/bash
+}
+# 保存提交修改信息 容器, 在本地镜像
+commitContainer(){
+    echo "save $container to local..."
+    docker commit $container $webImage
+}
+# 推送容器的镜像到远程 docker.hub
+pushImage(){
+    echo "push image: $webImage to remote..."
+    docker push $webImage
+    docker images | grep $webImage
 }
 
 ############################## 操作判断 #############################################
@@ -66,6 +83,15 @@ case $action in
     ;;
     exec)
         execContainer
+    ;;
+    e)
+        execContainer
+    ;;
+    commit)
+        commitContainer
+    ;;
+    push)
+        pushImage
     ;;
     h)
         operationHelp
