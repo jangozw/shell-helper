@@ -7,16 +7,28 @@ param3=$4
 
 
 
+# get current branch name
 function obtain_git_branch {
-  br=`git branch | grep "*"`
-  echo ${br/* /}
+    br=`git branch | grep "*"`
+    cur_branch=${br/* /}
+    if [ ! -n "$cur_branch" ];then
+        cur_branch="master"
+    fi
+    echo "$cur_branch"
 }
 
 cur_branch=`obtain_git_branch`
+
+# description
 echo "current branch: $cur_branch, current action: $action"
 
+# command functions
 function push {
-    echo $cur_branch
+    echo "拉取最新分支..."
+    git pull
+    echo "你当前的分支是：$result, 以下是更改的文件，请确认提交\n"
+    git status
+
 }
 function init {
     gitaddr=$1
